@@ -17,10 +17,10 @@ from dnsgen.dnsgen import GRP_INCREASE, GRP_DECREASE, GRP_INSERT, GRP_PREFIX, GR
                 type=click.Path(exists=True, readable=True), required=False)
 @click.option('-f', '--fast', default=None, help='Fast generation.', 
                 is_flag=True, required=False)
-@click.option('-p', '--processors', default=None, help='Fast generation.', 
-                default=["all"], required=False, type=click.Choice([
+@click.option('-p', '--processors', default=["all"], help='List of processors to use.', 
+                multiple=True, required=False, type=click.Choice([
                     GRP_INCREASE, GRP_DECREASE, GRP_INSERT, GRP_PREFIX, GRP_SUFFIX, GRP_REPLACE, "all"
-                ], case_sensitive=False, multiple=True))
+                ], case_sensitive=False))
 @click.argument('filename', required=True, type=click.File(mode='r'))
 def main(wordlen, wordlist, filename, fast, processors):
     # read the input
