@@ -112,6 +112,29 @@ def decrease_num_found(parts):
    
 	return domains
 
+@FAST_PERMUTATOR
+def prepend_word_first_index(parts):
+	'''
+	On last subdomain level, prepend existing content with `WORD` and `WORD-`
+	'''
+
+	# test.1.foo.example.com -> WORDtest.1.foo.example.com, WORD-test.1.foo.example.com
+
+	domains = []
+
+	for w in WORDS:
+		# Prepend normal
+		first_part = parts[0]
+
+		parts[0] = '{}{}'.format(w, first_part)
+		domains.append('.'.join(parts))
+
+		# Prepend with `-`
+		parts[0] = '{}-{}'.format(w, first_part)
+		domains.append('.'.join(parts))
+
+	return domains
+
 @PERMUTATOR
 def prepend_word_every_index(parts):
 	'''
@@ -135,6 +158,29 @@ def prepend_word_every_index(parts):
 			tmp_parts = parts[:-1]
 			tmp_parts[i] = '{}-{}'.format(w, tmp_parts[i])
 			domains.append('.'.join(tmp_parts + [parts[-1]]))
+
+	return domains
+
+@FAST_PERMUTATOR
+def append_word_first_index(parts):
+	'''
+	On last subdomain level, append existing content with `WORD` and `WORD-`
+	'''
+
+	# test.1.foo.example.com -> testWORD.1.foo.example.com, test-WORD.1.foo.example.com
+
+	domains = []
+
+	for w in WORDS:
+		# Prepend normal
+		first_part = parts[0]
+
+		parts[0] = '{}{}'.format(first_part, w)
+		domains.append('.'.join(parts))
+
+		# Prepend with `-`
+		parts[0] = '{}-{}'.format(first_part, w)
+		domains.append('.'.join(parts))
 
 	return domains
 
