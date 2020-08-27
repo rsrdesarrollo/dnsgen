@@ -252,7 +252,10 @@ def init_words(domains, wordlist, wordlen, fast):
 	if fast:
 		WORDS = WORDS[:10]
 	
-	WORDS = list(set(WORDS).union(extract_custom_words(domains, wordlen)))
+	if fast:
+		WORDS = list(set(WORDS))
+	else:
+		WORDS = list(set(WORDS).union(extract_custom_words(domains, wordlen)))
 
 def generate(domains, wordlist=None, wordlen=5, fast=False, skip_init=False, processors=None):
 	'''
@@ -273,6 +276,6 @@ def generate(domains, wordlist=None, wordlen=5, fast=False, skip_init=False, pro
 		for group_code, perm in (FAST_PERMUTATOR.members if fast else PERMUTATOR.members):
 			if group_code not in processors and "all" not in processors:
 				continue
-			
+
 			for possible_domain in perm(parts):
 				yield possible_domain
