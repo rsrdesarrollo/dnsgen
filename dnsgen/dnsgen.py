@@ -43,6 +43,7 @@ def partiate_domain(domain):
 
 	return parts
 
+
 @PERMUTATOR
 def insert_word_every_index(parts):
 	'''
@@ -52,15 +53,12 @@ def insert_word_every_index(parts):
 	# test.1.foo.example.com -> WORD.test.1.foo.example.com, test.WORD.1.foo.example.com, 
 	#                           test.1.WORD.foo.example.com, test.1.foo.WORD.example.com, ...
 
-	domains = []
-
 	for w in WORDS:
 		for i in range(len(parts)):
 			tmp_parts = parts[:-1]
 			tmp_parts.insert(i, w)
-			domains.append('.'.join(tmp_parts + [parts[-1]]))
+			yield '.'.join(tmp_parts + [parts[-1]])
 
-	return domains
 
 @FAST_PERMUTATOR
 @PERMUTATOR
@@ -73,7 +71,6 @@ def increase_num_found(parts):
 	# test1.example.com -> test2.example.com, test3.example.com, ...
 	# test01.example.com -> test02.example.com, test03.example.com, ...
 
-	domains = []
 	parts_joined = '.'.join(parts[:-1])
 	digits = re.findall(r'\d{1,3}', parts_joined)
 
@@ -81,9 +78,8 @@ def increase_num_found(parts):
 		for m in range(NUM_COUNT):
 			replacement = str(int(d) + 1 + m).zfill(len(d))
 			tmp_domain = parts_joined.replace(d, replacement)
-			domains.append('{}.{}'.format(tmp_domain, parts[-1]))
-   
-	return domains
+			yield '{}.{}'.format(tmp_domain, parts[-1])
+
 
 @FAST_PERMUTATOR
 @PERMUTATOR
@@ -96,7 +92,6 @@ def decrease_num_found(parts):
 	# test4.example.com -> test3.example.com, test2.example.com, ...
 	# test04.example.com -> test03.example.com, test02.example.com, ...
 
-	domains = []
 	parts_joined = '.'.join(parts[:-1])
 	digits = re.findall(r'\d{1,3}', parts_joined)
 
@@ -108,9 +103,8 @@ def decrease_num_found(parts):
 
 			replacement = str(new_digit).zfill(len(d))
 			tmp_domain = parts_joined.replace(d, replacement)
-			domains.append('{}.{}'.format(tmp_domain, parts[-1]))
-   
-	return domains
+			yield '{}.{}'.format(tmp_domain, parts[-1])
+
 
 @FAST_PERMUTATOR
 def prepend_word_first_index(parts):
@@ -120,20 +114,15 @@ def prepend_word_first_index(parts):
 
 	# test.1.foo.example.com -> WORDtest.1.foo.example.com, WORD-test.1.foo.example.com
 
-	domains = []
-
 	for w in WORDS:
-		# Prepend normal
 		first_part = parts[0]
 
-		parts[0] = '{}{}'.format(w, first_part)
-		domains.append('.'.join(parts))
+		# Prepend normal
+		yield '{}{}.{}'.format(w, first_part, '.'.join(parts[1:]))
 
 		# Prepend with `-`
-		parts[0] = '{}-{}'.format(w, first_part)
-		domains.append('.'.join(parts))
+		yield '{}-{}.{}'.format(w, first_part, '.'.join(parts[1:]))
 
-	return domains
 
 @PERMUTATOR
 def prepend_word_every_index(parts):
@@ -145,21 +134,18 @@ def prepend_word_every_index(parts):
 	#                           test.1.WORDfoo.example.com, WORD-test.1.foo.example.com, 
 	#                           test.WORD-1.foo.example.com, test.1.WORD-foo.example.com, ...
 
-	domains = []
-
 	for w in WORDS:
 		for i in range(len(parts[:-1])):
 			# Prepend normal
 			tmp_parts = parts[:-1]
 			tmp_parts[i] = '{}{}'.format(w, tmp_parts[i])
-			domains.append('.'.join(tmp_parts + [parts[-1]]))
+			yield '.'.join(tmp_parts + [parts[-1]])
 
 			# Prepend with `-`
 			tmp_parts = parts[:-1]
 			tmp_parts[i] = '{}-{}'.format(w, tmp_parts[i])
-			domains.append('.'.join(tmp_parts + [parts[-1]]))
+			yield '.'.join(tmp_parts + [parts[-1]])
 
-	return domains
 
 @FAST_PERMUTATOR
 def append_word_first_index(parts):
@@ -169,20 +155,15 @@ def append_word_first_index(parts):
 
 	# test.1.foo.example.com -> testWORD.1.foo.example.com, test-WORD.1.foo.example.com
 
-	domains = []
-
 	for w in WORDS:
-		# Prepend normal
 		first_part = parts[0]
 
-		parts[0] = '{}{}'.format(first_part, w)
-		domains.append('.'.join(parts))
+		# Append normal
+		yield '{}{}.{}'.format(first_part, w, '.'.join(parts[1:]))
 
-		# Prepend with `-`
-		parts[0] = '{}-{}'.format(first_part, w)
-		domains.append('.'.join(parts))
+		# Append with `-`
+		yield '{}-{}.{}'.format(first_part, w, '.'.join(parts[1:]))
 
-	return domains
 
 @PERMUTATOR
 def append_word_every_index(parts):
@@ -194,21 +175,18 @@ def append_word_every_index(parts):
 	#                           test.1.fooWORD.example.com, test-WORD.1.foo.example.com, 
 	#                           test.1-WORD.foo.example.com, test.1.foo-WORD.example.com, ...
 
-	domains = []
-
 	for w in WORDS:
 		for i in range(len(parts[:-1])):
 			# Append Normal
 			tmp_parts = parts[:-1]
 			tmp_parts[i] = '{}{}'.format(tmp_parts[i], w)
-			domains.append('.'.join(tmp_parts + [parts[-1]]))
+			yield '.'.join(tmp_parts + [parts[-1]])
 
 			# Append with `-`
 			tmp_parts = parts[:-1]
 			tmp_parts[i] = '{}-{}'.format(tmp_parts[i], w)
-			domains.append('.'.join(tmp_parts + [parts[-1]]))
+			yield '.'.join(tmp_parts + [parts[-1]])
 
-	return domains
 
 @FAST_PERMUTATOR
 @PERMUTATOR
@@ -223,17 +201,14 @@ def replace_word_with_word(parts):
 
 	# TODO: consider if the same word is found multiple times in one string
 
-	domains = []
-
 	for w in WORDS:
 		if w in '.'.join(parts[:-1]):
 			for w_alt in WORDS:
 				if w == w_alt:
 					continue
 
-				domains.append('{}.{}'.format('.'.join(parts[:-1]).replace(w, w_alt), parts[-1]))
+				yield '{}.{}'.format('.'.join(parts[:-1]).replace(w, w_alt), parts[-1])
 
-	return domains
 
 def extract_custom_words(domains, wordlen):
 	'''
