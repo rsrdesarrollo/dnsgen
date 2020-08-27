@@ -9,18 +9,29 @@ import tldextract
 WORDS = None
 NUM_COUNT = 3
 
+GRP_INSERT = 'insert'
+GRP_INCREASE = 'inc'
+GRP_DECREASE = 'dec'
+GRP_PREFIX = 'prefix'
+GRP_SUFFIX = 'suffix'
+GRP_REPLACE = 'replace'
+
 def create_registrar():
 	'''
 	Create function registration decorator
 	'''
 
 	registry = []
-	def registrar(func):
-		registry.append(func)
-		return func
 
-	registrar.members = registry
-	return registrar
+	def wrapper(group_code):
+		def registrar(func):
+			registry.append((group_code, func))
+			return func
+
+		return registrar
+
+	wrapper.members = registry
+	return wrapper
 
 # Create two types of permutator classes
 # PERMUTATOR -> used as basic class, includes every possible permutator
@@ -44,7 +55,7 @@ def partiate_domain(domain):
 	return parts
 
 
-@PERMUTATOR
+@PERMUTATOR(GRP_INSERT)
 def insert_word_every_index(parts):
 	'''
 	Create new subdomain levels by inserting the words between existing levels
@@ -60,8 +71,8 @@ def insert_word_every_index(parts):
 			yield '.'.join(tmp_parts + [parts[-1]])
 
 
-@FAST_PERMUTATOR
-@PERMUTATOR
+@FAST_PERMUTATOR(GRP_INCREASE)
+@PERMUTATOR(GRP_INCREASE)
 def increase_num_found(parts):
 	'''
 	If number is found in existing subdomain, increase this number without any other alteration.
@@ -81,8 +92,8 @@ def increase_num_found(parts):
 			yield '{}.{}'.format(tmp_domain, parts[-1])
 
 
-@FAST_PERMUTATOR
-@PERMUTATOR
+@FAST_PERMUTATOR(GRP_DECREASE)
+@PERMUTATOR(GRP_DECREASE)
 def decrease_num_found(parts):
 	'''
 	If number is found in existing subdomain, decrease this number without any other alteration.
@@ -106,7 +117,7 @@ def decrease_num_found(parts):
 			yield '{}.{}'.format(tmp_domain, parts[-1])
 
 
-@FAST_PERMUTATOR
+@FAST_PERMUTATOR(GRP_PREFIX)
 def prepend_word_first_index(parts):
 	'''
 	On last subdomain level, prepend existing content with `WORD` and `WORD-`
@@ -124,7 +135,7 @@ def prepend_word_first_index(parts):
 		yield '{}-{}.{}'.format(w, first_part, '.'.join(parts[1:]))
 
 
-@PERMUTATOR
+@PERMUTATOR(GRP_PREFIX)
 def prepend_word_every_index(parts):
 	'''
 	On every subdomain level, prepend existing content with `WORD` and `WORD-`
@@ -147,7 +158,7 @@ def prepend_word_every_index(parts):
 			yield '.'.join(tmp_parts + [parts[-1]])
 
 
-@FAST_PERMUTATOR
+@FAST_PERMUTATOR(GRP_SUFFIX)
 def append_word_first_index(parts):
 	'''
 	On last subdomain level, append existing content with `WORD` and `WORD-`
@@ -165,7 +176,7 @@ def append_word_first_index(parts):
 		yield '{}-{}.{}'.format(first_part, w, '.'.join(parts[1:]))
 
 
-@PERMUTATOR
+@PERMUTATOR(GRP_SUFFIX)
 def append_word_every_index(parts):
 	'''
 	On every subdomain level, append existing content with `WORD` and `WORD-`
@@ -188,8 +199,8 @@ def append_word_every_index(parts):
 			yield '.'.join(tmp_parts + [parts[-1]])
 
 
-@FAST_PERMUTATOR
-@PERMUTATOR
+@FAST_PERMUTATOR(GRP_REPLACE)
+@PERMUTATOR(GRP_REPLACE)
 def replace_word_with_word(parts):
 	'''
 	If word longer than 3 is found in existing subdomain,
@@ -243,10 +254,15 @@ def init_words(domains, wordlist, wordlen, fast):
 	
 	WORDS = list(set(WORDS).union(extract_custom_words(domains, wordlen)))
 
-def generate(domains, wordlist=None, wordlen=5, fast=False, skip_init=False):
+def generate(domains, wordlist=None, wordlen=5, fast=False, skip_init=False, processors=None):
 	'''
 	Generate permutations from provided domains
 	'''
+
+	if processors is None:
+		processors = {"all"}
+	else:
+		processors = set(processors)
 
 	if not skip_init:
 		init_words(domains, wordlist, wordlen, fast)
@@ -254,6 +270,9 @@ def generate(domains, wordlist=None, wordlen=5, fast=False, skip_init=False):
 	for domain in set(domains):
 		parts = partiate_domain(domain)
 
-		for perm in (FAST_PERMUTATOR.members if fast else PERMUTATOR.members):
+		for group_code, perm in (FAST_PERMUTATOR.members if fast else PERMUTATOR.members):
+			if group_code not in processors and "all" not in processors:
+				continue
+			
 			for possible_domain in perm(parts):
 				yield possible_domain

@@ -6,6 +6,8 @@ import sys
 import click
 
 from . import dnsgen
+from dnsgen.dnsgen import GRP_INCREASE, GRP_DECREASE, GRP_INSERT, GRP_PREFIX, GRP_SUFFIX, GRP_REPLACE
+
 
 @click.command()
 @click.option('-l', '--wordlen', default=6, 
@@ -15,10 +17,14 @@ from . import dnsgen
                 type=click.Path(exists=True, readable=True), required=False)
 @click.option('-f', '--fast', default=None, help='Fast generation.', 
                 is_flag=True, required=False)
+@click.option('-p', '--processors', default=None, help='Fast generation.', 
+                default=["all"], required=False, type=click.Choice([
+                    GRP_INCREASE, GRP_DECREASE, GRP_INSERT, GRP_PREFIX, GRP_SUFFIX, GRP_REPLACE, "all"
+                ], case_sensitive=False, multiple=True))
 @click.argument('filename', required=True, type=click.File(mode='r'))
-def main(wordlen, wordlist, filename, fast):
+def main(wordlen, wordlist, filename, fast, processors):
     # read the input
     domains = filename.read().splitlines()
 
-    for r in dnsgen.generate(domains, wordlist, wordlen, fast=fast):
+    for r in dnsgen.generate(domains, wordlist, wordlen, fast=fast, processors=processors):
         click.echo(r)
